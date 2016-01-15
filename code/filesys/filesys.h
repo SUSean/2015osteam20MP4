@@ -77,7 +77,7 @@ class FileSystem {
 	// MP4 mod tag
 	~FileSystem();
 
-    bool Create(char *name, int initialSize);  	
+    bool Create(char *name, int initialSize,bool);  	
 					// Create a file (UNIX creat)
 
     OpenFile * Open(char *name); 	// Open a file (UNIX open)
@@ -87,7 +87,7 @@ class FileSystem {
     int Write(char *buffer, int size, int id);
     int Read(char *buffer, int size, int id);
     int Close(int id);
-    void List();			// List all the files in the file system
+    void List(char* name);			// List all the files in the file system
 
     void Print();			// List all the files and their contents
     OpenFile * openFileTable[20];

@@ -1,4 +1,4 @@
-// directory.cc 
+// directory.cc
 //	Routines to manage a directory of file names.
 //
 //	The directory is a table of fixed length entries; each
@@ -16,7 +16,7 @@
 //	entries in the directory are used, no more files can be created.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -37,10 +37,10 @@
 Directory::Directory(int size)
 {
     table = new DirectoryEntry[size];
-	
+
 	// MP4 mod tag
 	memset(table, 0, sizeof(DirectoryEntry) * size);  // dummy operation to keep valgrind happy
-	
+
     tableSize = size;
     for (int i = 0; i < tableSize; i++)
 	table[i].inUse = FALSE;
@@ -52,9 +52,9 @@ Directory::Directory(int size)
 //----------------------------------------------------------------------
 
 Directory::~Directory()
-{ 
+{
     delete [] table;
-} 
+}
 
 //----------------------------------------------------------------------
 // Directory::FetchFrom
@@ -102,7 +102,7 @@ Directory::FindIndex(char *name)
 //----------------------------------------------------------------------
 // Directory::Find
 // 	Look up file name in directory, and return the disk sector number
-//	where the file's header is stored. Return -1 if the name isn't 
+//	where the file's header is stored. Return -1 if the name isn't
 //	in the directory.
 //
 //	"name" -- the file name to look up
@@ -114,10 +114,48 @@ Directory::Find(char *name)
     int i = FindIndex(name);
 
     if (i != -1)
-	return table[i].sector;
+        return table[i].sector;
     return -1;
 }
+int
+Directory::FindFormRoot(char *name)
+{
+    char buf[FileNameMaxLen+1];
+    char *cut;
+    char target[]= "/";
+    char temp[256];
 
+    if(!strcmp(name,"/"))
+        return 1;//DirectorySector
+    else{
+        strcpy(temp,name);
+        temp[strlen(name)]='\0';
+        cut = strtok(temp, target);
+        sprintf(buf,"/%s",cut);
+        buf[strlen(cut)+1]='\0';
+        name+=strlen(cut)+1;
+    }
+    for (int i = 0; i < tableSize; i++){
+        if (table[i].inUse){
+            if(!strncmp(table[i].name, buf, FileNameMaxLen)){
+                if(!strcmp(name,""))
+                    return table[i].sector;
+                else{
+                    OpenFile *nextDirectoryFile = new OpenFile(table[i].sector);
+                    Directory *nextDirectory = new Directory(64);
+                    nextDirectory->FetchFrom(nextDirectoryFile);
+
+                    int sector=nextDirectory->FindFormRoot(name);
+
+                    delete nextDirectoryFile;
+                    delete nextDirectory;
+                    return sector;
+                }
+            }
+        }
+    }
+    return -1;		// name not in directory
+}
 //----------------------------------------------------------------------
 // Directory::Add
 // 	Add a file into the directory.  Return TRUE if successful;
@@ -131,42 +169,42 @@ Directory::Find(char *name)
 
 bool
 Directory::Add(char *name, int newSector)
-{ 
+{
     if (FindIndex(name) != -1)
 	return FALSE;
 
     for (int i = 0; i < tableSize; i++)
         if (!table[i].inUse) {
             table[i].inUse = TRUE;
-            strncpy(table[i].name, name, FileNameMaxLen); 
+            strncpy(table[i].name, name, FileNameMaxLen);
             table[i].sector = newSector;
-        return TRUE;
-	}
+            return TRUE;
+        }
     return FALSE;	// no space.  Fix when we have extensible files.
 }
 
 //----------------------------------------------------------------------
 // Directory::Remove
 // 	Remove a file name from the directory.  Return TRUE if successful;
-//	return FALSE if the file isn't in the directory. 
+//	return FALSE if the file isn't in the directory.
 //
 //	"name" -- the file name to be removed
 //----------------------------------------------------------------------
 
 bool
 Directory::Remove(char *name)
-{ 
+{
     int i = FindIndex(name);
 
     if (i == -1)
 	return FALSE; 		// name not in directory
     table[i].inUse = FALSE;
-    return TRUE;	
+    return TRUE;
 }
 
 //----------------------------------------------------------------------
 // Directory::List
-// 	List all the file names in the directory. 
+// 	List all the file names in the directory.
 //----------------------------------------------------------------------
 
 void
@@ -185,7 +223,7 @@ Directory::List()
 
 void
 Directory::Print()
-{ 
+{
     FileHeader *hdr = new FileHeader;
 
     printf("Directory contents:\n");

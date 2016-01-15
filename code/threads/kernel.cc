@@ -337,7 +337,7 @@ int Kernel::CreateFile(char *filename)
 #endif
 int Kernel::CreateFile(char *filename,int size)
 {
-	if(fileSystem->Create(filename,size))
+	if(fileSystem->Create(filename,size,false))
         return 1;
     else
         return 0;

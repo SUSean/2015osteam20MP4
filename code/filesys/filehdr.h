@@ -61,7 +61,7 @@ class FileHeader {
     void Print();			// Print the contents of the file.
     FileHeader *GetNextFileHeader(){return nextFileHeader;}
   private:
-    FileHeader* nextFileHeader;
+
     int nextFileHeaderSector;
 	/*
 		MP4 hint:
@@ -81,6 +81,7 @@ class FileHeader {
     int numBytes;			// Number of bytes in the file
     int numSectors;			// Number of data sectors in the file
     int dataSectors[NumDirect];		// Disk sector numbers for each data 
+    FileHeader* nextFileHeader;
 					// block in the file
 };
 

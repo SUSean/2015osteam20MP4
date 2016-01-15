@@ -132,7 +132,7 @@ FileHeader::Deallocate(PersistentBitmap *freeMap)
 void
 FileHeader::FetchFrom(int sector)
 {
-    kernel->synchDisk->ReadSector(sector, (char *)this + sizeof(FileHeader*));
+    kernel->synchDisk->ReadSector(sector, (char *)this);
     if(nextFileHeaderSector!=-1){
         nextFileHeader=new FileHeader();
         nextFileHeader->FetchFrom(nextFileHeaderSector);
@@ -154,7 +154,7 @@ FileHeader::FetchFrom(int sector)
 void
 FileHeader::WriteBack(int sector)
 {
-    kernel->synchDisk->WriteSector(sector, (char *)this + sizeof(FileHeader*));
+    kernel->synchDisk->WriteSector(sector, (char *)this);
     if(nextFileHeaderSector!=-1)
         nextFileHeader->WriteBack(nextFileHeaderSector);
 	/*
