@@ -55,7 +55,7 @@ FileHeader::FileHeader()
 FileHeader::~FileHeader()
 {
 	// nothing to do now
-        if(nextFileHeader != NULL)
+    if(nextFileHeader != NULL)
         delete nextFileHeader;
 }
 
@@ -115,9 +115,9 @@ FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
     for (int i = 0; i < numSectors; i++) {
 	ASSERT(freeMap->Test((int) dataSectors[i]));  // ought to be marked!
-	freeMap->Clear((int) dataSectors[i]);
+        freeMap->Clear((int) dataSectors[i]);
     }
-    if(nextFileHeaderSector==-1){
+    if(nextFileHeaderSector!=-1){
         nextFileHeader->Deallocate(freeMap);
     }
 }

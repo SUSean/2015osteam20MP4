@@ -117,6 +117,15 @@ Directory::Find(char *name)
         return table[i].sector;
     return -1;
 }
+bool
+Directory::GetFlag(char *name)
+{
+    int i = FindIndex(name);
+
+    if (i != -1)
+        return table[i].dFlag;
+    return -1;
+}
 int
 Directory::FindFormRoot(char *name)
 {
@@ -168,7 +177,7 @@ Directory::FindFormRoot(char *name)
 //----------------------------------------------------------------------
 
 bool
-Directory::Add(char *name, int newSector)
+Directory::Add(char *name, int newSector,bool flag)
 {
     if (FindIndex(name) != -1)
 	return FALSE;
@@ -178,6 +187,7 @@ Directory::Add(char *name, int newSector)
             table[i].inUse = TRUE;
             strncpy(table[i].name, name, FileNameMaxLen);
             table[i].sector = newSector;
+            table[i].dFlag = flag;
             return TRUE;
         }
     return FALSE;	// no space.  Fix when we have extensible files.
@@ -214,7 +224,26 @@ Directory::List()
 	if (table[i].inUse)
 	    printf("%s\n", table[i].name);
 }
+void
+Directory::ListAll(char* head)
+{
+   for (int i = 0; i < tableSize; i++)
+	if (table[i].inUse){
+        printf("%s%s\n",head,table[i].name);
+        if(table[i].dFlag){
+            OpenFile *listDirectoryFile = new OpenFile(table[i].sector);
+            Directory *directory = new Directory(64);
+            directory->FetchFrom(listDirectoryFile);
+            char temp[256];
+            sprintf(temp,"%s%s",head,table[i].name);
+            temp[strlen(head)+strlen(table[i].name)]='\0';
+            directory->ListAll(temp);
+            delete listDirectoryFile;
+            delete directory;
+        }
+	}
 
+}
 //----------------------------------------------------------------------
 // Directory::Print
 // 	List all the file names in the directory, their FileHeader locations,

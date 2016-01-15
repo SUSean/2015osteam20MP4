@@ -36,6 +36,7 @@ class DirectoryEntry {
 					//   FileHeader for this file 
     char name[FileNameMaxLen + 1];	// Text name for file, with +1 for 
 					// the trailing '\0'
+    bool dFlag;
 };
 
 // The following class defines a UNIX-like "directory".  Each entry in
@@ -61,16 +62,20 @@ class Directory {
     int Find(char *name);		// Find the sector number of the 
 					// FileHeader for file: "name"
 
-    bool Add(char *name, int newSector);  // Add a file name into the directory
+    bool Add(char *name, int newSector,bool flag);  // Add a file name into the directory
 
     bool Remove(char *name);		// Remove a file from the directory
-
+  
     void List();			// Print the names of all the files
 					//  in the directory
+    void ListAll(char* head);          
     void Print();			// Verbose print of the contents
 					//  of the directory -- all the file
 					//  names and their contents.
     int FindFormRoot(char *name);
+    bool GetFlag(char *name);
+    char* GetName(int i){return table[i].name;}
+    bool IsUse(int i){return table[i].inUse;}
   private:
   
 	/*
@@ -80,10 +85,10 @@ class Directory {
 		In-core part: tableSize
 	*/
   
-    int tableSize;			// Number of directory entries
+
     DirectoryEntry *table;		// Table of pairs: 
 					// <file name, file header location> 
-
+    int tableSize;			// Number of directory entries
     int FindIndex(char *name);		// Find the index into the directory 
 					//  table corresponding to "name"
 };

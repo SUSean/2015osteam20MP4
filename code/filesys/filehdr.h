@@ -60,6 +60,7 @@ class FileHeader {
 
     void Print();			// Print the contents of the file.
     FileHeader *GetNextFileHeader(){return nextFileHeader;}
+    int GetNextFileHeaderSector(){return nextFileHeaderSector;}
   private:
 
     int nextFileHeaderSector;

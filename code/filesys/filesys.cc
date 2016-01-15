@@ -230,7 +230,7 @@ FileSystem::Create(char *name, int initialSize, bool directoryFlag )
             sector = freeMap->FindAndSet();
             if (sector == -1)
                 success = FALSE;		// no free block for file header
-            else if (!nowDirectory->Add(fileName, sector))
+            else if (!nowDirectory->Add(fileName, sector,directoryFlag))
                 success = FALSE;	// no space in directory
             else {
                 hdr = new FileHeader;
@@ -256,8 +256,8 @@ FileSystem::Create(char *name, int initialSize, bool directoryFlag )
             Directory *newDirectory = new Directory(NumDirEntries);
             newDirectory->WriteBack(newDirectoryFile);
 
-            delete newDirectory;
             delete newDirectoryFile;
+            delete newDirectory;
         }
     }
     else
@@ -355,33 +355,91 @@ FileSystem::Close(int id)
 //----------------------------------------------------------------------
 
 bool
-FileSystem::Remove(char *name)
+FileSystem::Remove(char *name,bool recursiveRemoveFlag)
 {
-    Directory *directory;
+    Directory *root;
     PersistentBitmap *freeMap;
     FileHeader *fileHdr;
+    int nowDirectorySector;
     int sector;
+    root = new Directory(NumDirEntries);
+    root->FetchFrom(directoryFile);
 
-    directory = new Directory(NumDirEntries);
-    directory->FetchFrom(directoryFile);
-    sector = directory->Find(name);
-    if (sector == -1) {
-       delete directory;
-       return FALSE;			 // file not found
+    char directory[256];
+    char fileName[10];
+    char temp[256];
+    char *cut;
+    char target[]= "/";
+    int length=0;
+    strcpy(temp,name);
+    temp[strlen(name)]='\0';
+    cut = strtok(temp, target);
+    sprintf(fileName,"/%s",cut);
+    fileName[strlen(cut)+1]='\0';
+    cut = strtok(NULL,target);
+    while(cut!=NULL){
+        sprintf(fileName,"/%s",cut);
+        fileName[strlen(cut)+1]='\0';
+        length+=strlen(cut)+1;
+        cut = strtok(NULL,target);
     }
+    if(length==0)
+        length=1;
+    strncpy(directory,name,length);
+    directory[length]='\0';
+    nowDirectorySector = root->FindFormRoot(directory);
+
+    if (nowDirectorySector == -1) {
+        delete root;
+        return FALSE;			 // file not found
+    }
+    OpenFile *nowDirectoryFile = new OpenFile(nowDirectorySector);
+    Directory *nowDirectory = new Directory(NumDirEntries);
+    nowDirectory->FetchFrom(nowDirectoryFile);
+    sector=nowDirectory->Find(fileName);
+    int dFlag=nowDirectory->GetFlag(fileName);
+    if (sector == -1||(dFlag&&!recursiveRemoveFlag)) {
+        delete root;
+        delete nowDirectoryFile;
+        delete nowDirectory;
+        return FALSE;			 // file not found
+    }
+    if(dFlag&&recursiveRemoveFlag){
+        OpenFile *traceDirectoryFile = new OpenFile(sector);
+        Directory *traceDirectory = new Directory(NumDirEntries);
+        traceDirectory->FetchFrom(traceDirectoryFile);
+        for(int i=0;i<NumDirEntries;i++){
+            if(traceDirectory->IsUse(i)){
+                char temp[256];
+                sprintf(temp,"%s%s",name,traceDirectory->GetName(i));
+                temp[strlen(name)+strlen(traceDirectory->GetName(i))]='\0';
+                Remove(temp,recursiveRemoveFlag);
+            }
+        }
+        traceDirectory->WriteBack(traceDirectoryFile);
+        delete traceDirectoryFile;
+        delete traceDirectory;
+    }
+
     fileHdr = new FileHeader;
     fileHdr->FetchFrom(sector);
-
     freeMap = new PersistentBitmap(freeMapFile,NumSectors);
-
     fileHdr->Deallocate(freeMap);  		// remove data blocks
-    freeMap->Clear(sector);			// remove header block
-    directory->Remove(name);
+    FileHeader *traceFileHeader = fileHdr;
+    int traceFileHeaderSector = sector;
+    while(traceFileHeader != NULL){
+        freeMap->Clear(traceFileHeaderSector);
+        traceFileHeaderSector = traceFileHeader->GetNextFileHeaderSector();
+        traceFileHeader = traceFileHeader->GetNextFileHeader();
+    }			// remove header block
+    nowDirectory->Remove(fileName);
 
     freeMap->WriteBack(freeMapFile);		// flush to disk
-    directory->WriteBack(directoryFile);        // flush to disk
+    nowDirectory->WriteBack(nowDirectoryFile);        // flush to disk
     delete fileHdr;
-    delete directory;
+    delete root;
+    delete nowDirectoryFile;
+    delete nowDirectory;
     delete freeMap;
     return TRUE;
 }
@@ -392,7 +450,7 @@ FileSystem::Remove(char *name)
 //----------------------------------------------------------------------
 
 void
-FileSystem::List(char* name)
+FileSystem::List(char* name,bool recursiveListFlag)
 {
     int sector;
     Directory *root = new Directory(NumDirEntries);
@@ -402,7 +460,11 @@ FileSystem::List(char* name)
     OpenFile *listDirectoryFile = new OpenFile(sector);
     Directory *directory = new Directory(NumDirEntries);
     directory->FetchFrom(listDirectoryFile);
-    directory->List();
+    if(recursiveListFlag)
+        directory->ListAll("");
+    else
+        directory->List();
+    delete listDirectoryFile;
     delete directory;
     delete root;
 }

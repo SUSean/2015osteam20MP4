@@ -77,17 +77,17 @@ class FileSystem {
 	// MP4 mod tag
 	~FileSystem();
 
-    bool Create(char *name, int initialSize,bool);  	
+    bool Create(char *name, int initialSize,bool directoryFlag);  	
 					// Create a file (UNIX creat)
 
     OpenFile * Open(char *name); 	// Open a file (UNIX open)
 
-    bool Remove(char *name);  		// Delete a file (UNIX unlink)
+    bool Remove(char *name,bool recursiveRemoveFlag);  		// Delete a file (UNIX unlink)
     int Openfile(char *name);
     int Write(char *buffer, int size, int id);
     int Read(char *buffer, int size, int id);
     int Close(int id);
-    void List(char* name);			// List all the files in the file system
+    void List(char* name,bool recursiveListFlag);			// List all the files in the file system
 
     void Print();			// List all the files and their contents
     OpenFile * openFileTable[20];
