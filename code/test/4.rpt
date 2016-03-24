@@ -1,0 +1,20 @@
+==4732== Memcheck, a memory error detector
+==4732== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==4732== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==4732== Command: ../build.linux/nachos -cp num_100.txt /t0/f1
+==4732== 
+==4732== 
+==4732== HEAP SUMMARY:
+==4732==     in use at exit: 648 bytes in 2 blocks
+==4732==   total heap usage: 344 allocs, 342 frees, 34,288 bytes allocated
+==4732== 
+==4732== LEAK SUMMARY:
+==4732==    definitely lost: 0 bytes in 0 blocks
+==4732==    indirectly lost: 0 bytes in 0 blocks
+==4732==      possibly lost: 0 bytes in 0 blocks
+==4732==    still reachable: 648 bytes in 2 blocks
+==4732==         suppressed: 0 bytes in 0 blocks
+==4732== Rerun with --leak-check=full to see details of leaked memory
+==4732== 
+==4732== For counts of detected and suppressed errors, rerun with: -v
+==4732== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 18 from 8)

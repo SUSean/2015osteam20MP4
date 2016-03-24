@@ -62,7 +62,7 @@
 // supports extensible files, the directory size sets the maximum number
 // of files that can be loaded onto the disk.
 #define FreeMapFileSize 	(NumSectors / BitsInByte)
-#define NumDirEntries 		64
+#define NumDirEntries 		64//10
 #define DirectoryFileSize 	(sizeof(DirectoryEntry) * NumDirEntries)
 
 //----------------------------------------------------------------------
@@ -216,7 +216,7 @@ FileSystem::Create(char *name, int initialSize, bool directoryFlag )
     if(length==0)
         length=1;
     strncpy(directory,name,length);
-    directory[length]='\0';
+    directory[length]='\0';//find directory/filename
     nowDirectorySector = root->FindFormRoot(directory);
     if(nowDirectorySector >= 0){
         OpenFile *nowDirectoryFile = new OpenFile(nowDirectorySector);
@@ -258,7 +258,7 @@ FileSystem::Create(char *name, int initialSize, bool directoryFlag )
 
             delete newDirectoryFile;
             delete newDirectory;
-        }
+        }//initial new directory
     }
     else
         success = FALSE;
@@ -386,12 +386,12 @@ FileSystem::Remove(char *name,bool recursiveRemoveFlag)
     if(length==0)
         length=1;
     strncpy(directory,name,length);
-    directory[length]='\0';
+    directory[length]='\0';         //find directory/filename
     nowDirectorySector = root->FindFormRoot(directory);
 
     if (nowDirectorySector == -1) {
         delete root;
-        return FALSE;			 // file not found
+        return FALSE;			    // file not found
     }
     OpenFile *nowDirectoryFile = new OpenFile(nowDirectorySector);
     Directory *nowDirectory = new Directory(NumDirEntries);
@@ -402,7 +402,7 @@ FileSystem::Remove(char *name,bool recursiveRemoveFlag)
         delete root;
         delete nowDirectoryFile;
         delete nowDirectory;
-        return FALSE;			 // file not found
+        return FALSE;			    // file not found
     }
     if(dFlag&&recursiveRemoveFlag){
         OpenFile *traceDirectoryFile = new OpenFile(sector);
@@ -415,7 +415,7 @@ FileSystem::Remove(char *name,bool recursiveRemoveFlag)
                 temp[strlen(name)+strlen(traceDirectory->GetName(i))]='\0';
                 Remove(temp,recursiveRemoveFlag);
             }
-        }
+        }                           //trace  directory entry
         traceDirectory->WriteBack(traceDirectoryFile);
         delete traceDirectoryFile;
         delete traceDirectory;
@@ -424,18 +424,18 @@ FileSystem::Remove(char *name,bool recursiveRemoveFlag)
     fileHdr = new FileHeader;
     fileHdr->FetchFrom(sector);
     freeMap = new PersistentBitmap(freeMapFile,NumSectors);
-    fileHdr->Deallocate(freeMap);  		// remove data blocks
+    fileHdr->Deallocate(freeMap);  		        // remove data blocks
     FileHeader *traceFileHeader = fileHdr;
     int traceFileHeaderSector = sector;
     while(traceFileHeader != NULL){
         freeMap->Clear(traceFileHeaderSector);
         traceFileHeaderSector = traceFileHeader->GetNextFileHeaderSector();
         traceFileHeader = traceFileHeader->GetNextFileHeader();
-    }			// remove header block
+    }			                                // remove header block
     nowDirectory->Remove(fileName);
 
-    freeMap->WriteBack(freeMapFile);		// flush to disk
-    nowDirectory->WriteBack(nowDirectoryFile);        // flush to disk
+    freeMap->WriteBack(freeMapFile);		    // flush to disk
+    nowDirectory->WriteBack(nowDirectoryFile);  // flush to disk
     delete fileHdr;
     delete root;
     delete nowDirectoryFile;

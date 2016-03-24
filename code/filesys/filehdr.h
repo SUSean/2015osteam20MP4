@@ -63,7 +63,7 @@ class FileHeader {
     int GetNextFileHeaderSector(){return nextFileHeaderSector;}
   private:
 
-    int nextFileHeaderSector;
+
 	/*
 		MP4 hint:
 		You will need a data structure to store more information in a header.
@@ -82,7 +82,8 @@ class FileHeader {
     int numBytes;			// Number of bytes in the file
     int numSectors;			// Number of data sectors in the file
     int dataSectors[NumDirect];		// Disk sector numbers for each data 
-    FileHeader* nextFileHeader;
+    int nextFileHeaderSector;
+    FileHeader* nextFileHeader;//In-core part 
 					// block in the file
 };
 

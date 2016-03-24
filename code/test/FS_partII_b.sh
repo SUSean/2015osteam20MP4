@@ -1,8 +1,8 @@
-valgrind ../build.linux/nachos -f
-valgrind ../build.linux/nachos -cp num_100.txt /100
-valgrind ../build.linux/nachos -cp num_1000.txt /1000	
-valgrind ../build.linux/nachos -p /1000
+../build.linux/nachos -f
+../build.linux/nachos -cp num_100.txt /100
+../build.linux/nachos -cp num_1000.txt /1000	
+../build.linux/nachos -p /1000
 echo "========================================="
-valgrind ../build.linux/nachos -p /100
+../build.linux/nachos -p /100
 echo "========================================="
 ../build.linux/nachos -l /
